@@ -108,7 +108,7 @@
 
         reader.readAsText(file);
         reader.addEventListener("load", (event) => {
-          const parsingResult = svgParse.parse(event.target.result);
+          const parsingResult = svgParse.convert(event.target.result);
 
           output.value = JSON.stringify(parsingResult, null, 2);
         });

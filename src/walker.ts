@@ -13,6 +13,8 @@ import {
   createExLine,
   createExDraw,
   Point,
+  ExcalidrawText,
+  createExText,
 } from "./elements/ExcalidrawElement";
 import {
   presAttrsToElementValues,
@@ -30,6 +32,7 @@ const SUPPORTED_TAGS = [
   "svg",
   "path",
   "g",
+  "text",
   "use",
   "circle",
   "ellipse",
@@ -321,6 +324,48 @@ const walkers = {
     walk(args, args.tw.nextNode());
   },
 
+  text: (args: WalkerArgs) => {
+    const { tw, scene, groups } = args;
+    const el = tw.currentNode as Element;
+
+    const x = getNum(el, "x", 0);
+    const y = getNum(el, "y", 0);
+
+    const hasFill = has(el, "fill");
+    const fill = get(el, "fill");
+
+    const mat = getTransformMatrix(el, groups);
+
+    const m = mat4.fromValues(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, x, y, 0, 1);
+
+    const result = mat4.multiply(mat4.create(), mat, m);
+
+    const textContent = el.textContent || "";
+    const fontSize = getNum(el, "font-size", 16);
+
+    // Note: You might want to map other SVG text properties to Excalidraw text properties here
+
+    const text: ExcalidrawText = {
+      ...createExText(),
+      ...presAttrs(el, groups),
+      x: result[12],
+      y: result[13],
+      originalText: textContent,
+      fillStyle: "hachure",
+      text: textContent,
+      strokeColor: hasFill ? fill : "#1E1E1E",
+      backgroundColor: "transparent",
+      width: 40,
+      height: 40,
+      fontSize: fontSize || 20,
+      // fontFamily
+    };
+
+    scene.elements.push(text);
+
+    walk(args, args.tw.nextNode());
+  },
+
   rect: (args: WalkerArgs) => {
     const { tw, scene, groups } = args;
     const el = tw.currentNode as Element;
@@ -367,7 +412,7 @@ const walkers = {
 
     const points = pointsOnPath(get(el, "d"));
 
-    const fillColor = get(el, "fill", "black");
+    const fillColor = get(el, "fill", "transparent");
     const fillRule = get(el, "fill-rule", "nonzero");
 
     let elements: ExcalidrawDraw[] = [];
@@ -397,6 +442,10 @@ const walkers = {
           let backgroundColor = fillColor;
           if (initialWindingOrder !== windingOrder) {
             backgroundColor = "#FFFFFF";
+          }
+
+          if (backgroundColor === "none") {
+            backgroundColor = "transparent";
           }
 
           return {

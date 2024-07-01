@@ -61,12 +61,12 @@ const attrHandlers: PresAttrHandlers = {
   fill: ({ el, exVals }) => {
     const fill = get(el, `fill`);
 
-    exVals.backgroundColor = fill === "none" ? "#00000000" : fill;
+    exVals.backgroundColor = fill === "none" ? "transparent" : fill;
   },
 
   "fill-opacity": ({ el, exVals }) => {
     exVals.backgroundColor = hexWithAlpha(
-      get(el, "fill", "#000000"),
+      get(el, "fill", "transparent"),
       getNum(el, "fill-opacity"),
     );
   },
